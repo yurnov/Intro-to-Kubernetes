@@ -1,0 +1,26 @@
+# first-pod.yaml — A simple Pod running the nginx web server
+# This is the most basic Kubernetes resource you can create.
+# A Pod is the smallest deployable unit in Kubernetes.
+
+apiVersion: v1              # Core API group — stable, production-ready
+kind: Pod                   # Resource type: Pod
+metadata:
+  name: my-first-pod        # Unique name for this Pod within the namespace
+  namespace: default        # Namespace to deploy into (default for this first exercise)
+  labels:                   # Labels are key-value pairs used for selection and organization
+    app: nginx              # Common convention: 'app' label identifies the application
+    environment: training   # Custom label for our training use case
+spec:
+  containers:               # List of containers to run in this Pod
+  - name: nginx             # Container name (must be unique within the Pod)
+    image: nginx:1.30.0       # Container image from Docker Hub (pinned version!)
+    ports:
+    - containerPort: 80     # Port the container listens on (informational, not enforced)
+      protocol: TCP         # Protocol (TCP is the default)
+    resources:              # Resource requests/limits (best practice to always include)
+      requests:
+        memory: "64Mi"      # Minimum memory guaranteed
+        cpu: "50m"          # Minimum CPU guaranteed (50 millicores = 0.05 CPU)
+      limits:
+        memory: "128Mi"     # Maximum memory allowed (OOMKill if exceeded)
+        cpu: "100m"         # Maximum CPU allowed (throttled if exceeded)

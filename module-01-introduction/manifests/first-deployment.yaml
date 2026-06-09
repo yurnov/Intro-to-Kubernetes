@@ -1,0 +1,42 @@
+# first-deployment.yaml — A Deployment managing multiple nginx replicas
+# A Deployment provides declarative updates for Pods and ReplicaSets.
+# Unlike a standalone Pod, a Deployment automatically replaces failed Pods
+# and supports scaling, rolling updates, and rollbacks.
+
+apiVersion: apps/v1         # 'apps' API group — stable
+kind: Deployment            # Resource type: Deployment
+metadata:
+  name: nginx-deployment    # Name of the Deployment
+  namespace: default        # Namespace
+  labels:
+    app: nginx              # Labels on the Deployment itself
+spec:
+  replicas: 3               # Desired number of Pod replicas
+  selector:                 # How the Deployment finds which Pods it manages
+    matchLabels:
+      app: nginx            # Must match the Pod template labels below
+  template:                 # Pod template — defines what each replica looks like
+    metadata:
+      labels:
+        app: nginx          # These labels MUST match spec.selector.matchLabels
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.30.0   # Container image (pinned version)
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+
+# Key points:
+# 1. The Deployment creates a ReplicaSet, which creates the Pods
+# 2. spec.selector.matchLabels MUST match spec.template.metadata.labels
+# 3. If a Pod dies, the ReplicaSet controller creates a replacement
+# 4. Scaling: kubectl scale deployment nginx-deployment --replicas=5
+# 5. Rolling update: change the image tag, then kubectl apply -f
