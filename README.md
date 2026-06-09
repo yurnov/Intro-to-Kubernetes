@@ -32,10 +32,10 @@ A hands-on training course designed to take participants from container basics t
 
 ### Primary Option: Local (kind)
 ```bash
-# Install kind v0.31.0
-go install sigs.k8s.io/kind@v0.31.0
+# Install kind v0.32.0
+go install sigs.k8s.io/kind@v0.32.0
 # or
-curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.31.0/kind-linux-amd64
+curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.32.0/kind-linux-amd64
 chmod +x ./kind && sudo mv ./kind /usr/local/bin/kind
 
 # Create the canonical 3-node course cluster from the repository root
@@ -46,8 +46,8 @@ kubectl get nodes
 ```
 
 This course standardizes on the repository's `kind-config.yaml`, which pins:
-- `kind` `v0.31.0`
-- `kindest/node` `v1.35.1` (tag-only; production setups should pin by sha256 digest)
+- `kind` `v0.32.0`
+- `kindest/node` `v1.36.1` (tag-only; production setups should pin by sha256 digest)
 - host port mappings for `80/443`
 - the `ingress-ready=true` label on the control-plane node
 
@@ -67,7 +67,7 @@ Use a managed Kubernetes service:
 
 ### Required Tools
 ```bash
-# kubectl 1.36.1 (one minor ahead of the cluster — supported skew, expect a banner)
+# kubectl 1.36.1 (matches the cluster's kindest/node v1.36.1)
 curl -LO "https://dl.k8s.io/release/v1.36.1/bin/linux/amd64/kubectl"
 sudo install kubectl /usr/local/bin/kubectl
 
@@ -78,7 +78,7 @@ curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4 | bash
 # https://github.com/derailed/k9s/releases/tag/v0.50.18
 ```
 
-> **📝 Version compatibility:** The course pins `kubectl v1.36.1` against `kindest/node v1.35.1` because `kind v0.31.0` does not yet ship a 1.36 node image. One minor of client/server skew is supported by [Kubernetes' version policy](https://kubernetes.io/releases/version-skew-policy/) — you'll see a warning on every command, which is safe to ignore. When `kind` releases a 1.36 node image, bump `kind-config.yaml` and the install commands above in lockstep.
+> **📝 Version compatibility:** The course pins `kubectl v1.36.1` against `kindest/node v1.36.1` (shipped with `kind v0.32.0`), so client and server are on the same minor — no version-skew warning. If you bump one, bump `kind-config.yaml` and the install commands above in lockstep, keeping client/server within the [supported skew](https://kubernetes.io/releases/version-skew-policy/).
 
 ### Install the Tooling
 Run the bundled installer to grab `kubectl`, `kind`, and `helm` at the course-pinned versions:

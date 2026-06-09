@@ -11,9 +11,9 @@ set -uo pipefail
 
 # Versions the course standardizes on. Update here when you bump the course.
 KUBECTL_MIN_MINOR=35           # accept >= 1.35 (1.36 is the course default)
-KIND_MIN="0.31.0"
+KIND_MIN="0.32.0"
 HELM_MIN_MAJOR=4               # course uses Helm 4
-KIND_NODE_IMAGE="kindest/node:v1.35.1"
+KIND_NODE_IMAGE="kindest/node:v1.36.1"
 
 # ANSI helpers (no colour outside a TTY)
 if [ -t 1 ]; then

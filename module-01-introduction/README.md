@@ -55,7 +55,7 @@ Kustomize Version: v5.x.x
 
 ```bash
 # Download kind
-curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.31.0/kind-linux-amd64
+curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.32.0/kind-linux-amd64
 
 # Make it executable and move to PATH
 chmod +x ./kind
@@ -67,7 +67,7 @@ kind version
 
 Expected output:
 ```
-kind v0.31.0 go1.25.x linux/amd64
+kind v0.32.0 go1.25.x linux/amd64
 ```
 
 ### Step 3: Create a 3-Node Cluster
@@ -87,7 +87,7 @@ kind create cluster --name training --config kind-config.yaml
 Expected output:
 ```
 Creating cluster "training" ...
- ✓ Ensuring node image (kindest/node:v1.35.1) 🖼
+ ✓ Ensuring node image (kindest/node:v1.36.1) 🖼
  ✓ Preparing nodes 📦 📦 📦
  ✓ Writing configuration 📜
  ✓ Starting control-plane 🕹️
@@ -112,9 +112,9 @@ kubectl get nodes
 Expected output:
 ```
 NAME                     STATUS   ROLES           AGE   VERSION
-training-control-plane   Ready    control-plane   2m    v1.35.1
-training-worker          Ready    <none>          90s   v1.35.1
-training-worker2         Ready    <none>          90s   v1.35.1
+training-control-plane   Ready    control-plane   2m    v1.36.1
+training-worker          Ready    <none>          90s   v1.36.1
+training-worker2         Ready    <none>          90s   v1.36.1
 ```
 
 > **⚠️ Warning:** If nodes show `NotReady`, wait 30-60 seconds for the networking components to initialize, then run `kubectl get nodes` again.

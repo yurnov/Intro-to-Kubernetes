@@ -13,7 +13,7 @@ set -uo pipefail
 
 # Course-pinned minimal versions --------------------------------------------
 KUBECTL_VERSION="v1.36.1"
-KIND_VERSION="v0.31.0"
+KIND_VERSION="v0.32.0"
 HELM_VERSION="v4.2.0"
 
 PREFIX="${PREFIX:-/usr/local/bin}"
