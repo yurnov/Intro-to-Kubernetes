@@ -1,0 +1,22 @@
+# sample-pod.yaml — Simple Pod for namespace exploration exercises
+apiVersion: v1
+kind: Pod
+metadata:
+  name: explore-pod
+  namespace: training            # Explicitly set the namespace
+  labels:
+    app: explore                 # Label for identification
+    module: "02"                 # Track which module this belongs to
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.30.0            # Well-known public image
+    ports:
+    - containerPort: 80          # Port nginx listens on
+    resources:                   # Required when ResourceQuota is set
+      requests:
+        cpu: "100m"              # 100 millicores (0.1 CPU)
+        memory: "128Mi"          # 128 MiB of memory
+      limits:
+        cpu: "200m"              # 200 millicores (0.2 CPU)
+        memory: "256Mi"          # 256 MiB of memory

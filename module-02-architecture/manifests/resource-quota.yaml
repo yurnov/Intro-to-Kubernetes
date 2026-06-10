@@ -1,0 +1,14 @@
+# resource-quota.yaml — ResourceQuota to limit resources in the training namespace
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: training-quota
+  namespace: training
+spec:
+  hard:
+    pods: "10"                     # Maximum 10 Pods in this namespace
+    requests.cpu: "4"              # Total CPU requests across all Pods
+    requests.memory: "8Gi"         # Total memory requests across all Pods
+    limits.cpu: "8"                # Total CPU limits across all Pods
+    limits.memory: "16Gi"          # Total memory limits across all Pods
+    persistentvolumeclaims: "5"    # Maximum 5 PersistentVolumeClaims

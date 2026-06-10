@@ -1,0 +1,8 @@
+# namespace.yaml — Namespace for training exercises
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: training              # Dedicated namespace for all lab exercises
+  labels:
+    purpose: training         # Label for identification
+    course: kubernetes-intro
