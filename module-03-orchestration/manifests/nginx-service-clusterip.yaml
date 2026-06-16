@@ -1,0 +1,29 @@
+# nginx-service-clusterip.yaml — ClusterIP Service for internal access
+# A ClusterIP Service exposes Pods on a cluster-internal IP address.
+# This is the default Service type — only reachable from within the cluster.
+# Use this for internal communication between microservices.
+
+apiVersion: v1              # Core API group — stable, production-ready
+kind: Service               # Resource type: Service
+metadata:
+  name: nginx-service       # Name of the Service (used as DNS name within the cluster)
+  namespace: training       # Dedicated namespace for all lab exercises
+  labels:
+    app: nginx              # Labels on the Service itself
+    module: "03"            # Track which module this belongs to
+spec:
+  type: ClusterIP           # ClusterIP is the default — internal-only access
+  selector:                 # Determines which Pods receive traffic from this Service
+    app: nginx              # Routes traffic to all Pods with label app=nginx
+  ports:
+  - port: 80                # Port the Service listens on (cluster-internal)
+    targetPort: 80          # Port on the Pod to forward traffic to
+    protocol: TCP           # Protocol (TCP is the default)
+    name: http              # Named port — useful when a Service exposes multiple ports
+
+# Key points:
+# 1. ClusterIP assigns a virtual IP reachable only inside the cluster
+# 2. DNS name: nginx-service.training.svc.cluster.local
+# 3. The selector (app: nginx) must match labels on the target Pods
+# 4. Traffic is load-balanced across all matching Pods using round-robin
+# 5. Test from inside the cluster: kubectl exec debug-pod -n training -- wget -qO- nginx-service

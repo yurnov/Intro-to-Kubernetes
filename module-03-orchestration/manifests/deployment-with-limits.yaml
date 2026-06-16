@@ -1,0 +1,46 @@
+# deployment-with-limits.yaml — Deployment with explicit resource requests and limits
+# Resource management is critical in Kubernetes to ensure fair scheduling,
+# prevent noisy-neighbor issues, and protect node stability.
+# Requests guarantee minimum resources; limits cap the maximum.
+
+apiVersion: apps/v1         # 'apps' API group — stable
+kind: Deployment            # Resource type: Deployment
+metadata:
+  name: limited-app         # Name of the Deployment
+  namespace: training       # Dedicated namespace for all lab exercises
+  labels:
+    app: limited-app        # Labels on the Deployment itself
+    module: "03"            # Track which module this belongs to
+spec:
+  replicas: 2               # Desired number of Pod replicas
+  selector:                 # How the Deployment finds which Pods it manages
+    matchLabels:
+      app: limited-app      # Must match the Pod template labels below
+  template:                 # Pod template — defines what each replica looks like
+    metadata:
+      labels:
+        app: limited-app    # These labels MUST match spec.selector.matchLabels
+    spec:
+      containers:
+      - name: nginx         # Container name (must be unique within the Pod)
+        image: nginx:1.30.0   # Container image from Docker Hub (pinned version!)
+        ports:
+        - containerPort: 80 # Port the container listens on
+          protocol: TCP
+
+        resources:          # Resource requests and limits — essential for production
+          requests:         # Requests — minimum resources guaranteed by the scheduler
+            cpu: "50m"      # 50 millicores (0.05 CPU) — used for scheduling decisions
+            memory: "64Mi"  # 64 MiB of memory — Pod is scheduled only if node has this available
+          limits:           # Limits — maximum resources the container can consume
+            cpu: "100m"     # 100 millicores (0.1 CPU) — container is throttled above this
+            memory: "128Mi" # 128 MiB of memory — container is OOMKilled if it exceeds this
+
+# Key points:
+# 1. Requests are used by the scheduler to find a node with enough resources
+# 2. Limits enforce maximum consumption — CPU is throttled, memory triggers OOMKill
+# 3. Best practice: set requests = expected usage, limits = peak usage
+# 4. If no requests are set, the Pod gets "BestEffort" QoS (first to be evicted)
+# 5. If requests == limits, the Pod gets "Guaranteed" QoS (highest priority)
+# 6. If requests < limits, the Pod gets "Burstable" QoS (middle priority)
+# 7. Check resource usage: kubectl top pods -n training (requires metrics-server)

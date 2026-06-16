@@ -1,0 +1,31 @@
+# nginx-service-nodeport.yaml — NodePort Service for external access
+# A NodePort Service exposes the application on each node's IP at a static port.
+# This allows external traffic to reach Pods from outside the cluster.
+# In production, prefer LoadBalancer or Ingress — NodePort is useful for development.
+
+apiVersion: v1              # Core API group — stable, production-ready
+kind: Service               # Resource type: Service
+metadata:
+  name: nginx-nodeport      # Name of the Service
+  namespace: training       # Dedicated namespace for all lab exercises
+  labels:
+    app: nginx              # Labels on the Service itself
+    module: "03"            # Track which module this belongs to
+spec:
+  type: NodePort            # NodePort — exposes Service on each node's IP at a static port
+  selector:                 # Determines which Pods receive traffic from this Service
+    app: nginx              # Routes traffic to all Pods with label app=nginx
+  ports:
+  - port: 80                # Port the Service listens on (cluster-internal)
+    targetPort: 80          # Port on the Pod to forward traffic to
+    nodePort: 30080         # Static port on every node (range: 30000-32767)
+    protocol: TCP           # Protocol (TCP is the default)
+    name: http              # Named port for clarity
+
+# Key points:
+# 1. NodePort automatically creates a ClusterIP as well (it's a superset)
+# 2. Access from outside: http://<any-node-ip>:30080
+# 3. nodePort range is 30000-32767 by default (configurable on the API server)
+# 4. The selector (app: nginx) must match labels on the target Pods
+# 5. Traffic flow: external → NodePort (30080) → Service (80) → Pod (80)
+# 6. In production, use LoadBalancer type or an Ingress controller instead

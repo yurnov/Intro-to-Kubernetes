@@ -1,0 +1,36 @@
+# debug-pod.yaml — Busybox Pod for DNS and network troubleshooting
+# A long-running debug Pod that you can exec into for cluster diagnostics.
+# Use it to run nslookup, wget, ping, and other network tools from inside
+# the cluster to verify DNS resolution, Service connectivity, and more.
+
+apiVersion: v1              # Core API group — stable, production-ready
+kind: Pod                   # Resource type: Pod
+metadata:
+  name: debug-pod           # Unique name for this Pod within the namespace
+  namespace: training       # Dedicated namespace for all lab exercises
+  labels:                   # Labels are key-value pairs used for selection and organization
+    app: debug              # Application identifier
+    purpose: dns-testing    # Describes the Pod's intended use case
+    module: "03"            # Track which module this belongs to
+spec:
+  containers:               # List of containers to run in this Pod
+  - name: debug             # Container name (must be unique within the Pod)
+    image: busybox:1.37.0     # Lightweight image with common network tools (pinned version!)
+    command:                # Override the default entrypoint
+    - sleep
+    - "3600"                # Stay alive for 1 hour — enough time for debugging sessions
+    resources:              # Resource requests/limits (best practice to always include)
+      requests:
+        memory: "32Mi"      # Minimal memory for a debug container
+        cpu: "25m"          # Minimal CPU (25 millicores)
+      limits:
+        memory: "64Mi"      # Cap memory usage
+        cpu: "50m"          # Cap CPU usage
+
+# Key points:
+# 1. Exec into the Pod: kubectl exec -it debug-pod -n training -- sh
+# 2. Test DNS resolution: nslookup nginx-service.training.svc.cluster.local
+# 3. Test Service connectivity: wget -qO- http://nginx-service
+# 4. Check default DNS search domains: cat /etc/resolv.conf
+# 5. Test cross-namespace DNS: nslookup kubernetes.default.svc.cluster.local
+# 6. The Pod sleeps for 3600s (1 hour) — restart it if it expires

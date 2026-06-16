@@ -1,0 +1,60 @@
+# init-container-pod.yaml — Pod demonstrating init containers
+# Init containers run to completion BEFORE any main containers start.
+# They are useful for setup tasks like downloading config, waiting for
+# a service to be ready, or populating shared volumes with data.
+
+apiVersion: v1              # Core API group — stable, production-ready
+kind: Pod                   # Resource type: Pod
+metadata:
+  name: init-demo           # Unique name for this Pod within the namespace
+  namespace: training       # Dedicated namespace for all lab exercises
+  labels:                   # Labels are key-value pairs used for selection and organization
+    app: init-demo          # Common convention: 'app' label identifies the application
+    module: "03"            # Track which module this belongs to
+spec:
+  initContainers:           # Init containers run sequentially before main containers
+  - name: init-writer       # Descriptive name for the init container
+    image: busybox:1.37.0     # Lightweight image for shell tasks (pinned version!)
+    command:                # Command to run inside the init container
+    - sh
+    - -c
+    - echo "Init complete!" > /work-dir/init-output.txt  # Write a message to the shared volume
+    volumeMounts:           # Mount the shared volume into this container
+    - name: shared-data     # Must match the volume name defined below
+      mountPath: /work-dir  # Path inside the init container where volume is mounted
+    resources:              # Resource requests/limits (best practice to always include)
+      requests:
+        memory: "32Mi"      # Minimum memory guaranteed
+        cpu: "25m"          # Minimum CPU guaranteed (25 millicores)
+      limits:
+        memory: "64Mi"      # Maximum memory allowed (OOMKill if exceeded)
+        cpu: "50m"          # Maximum CPU allowed (throttled if exceeded)
+
+  containers:               # Main containers — start only after ALL init containers succeed
+  - name: main-reader       # Main container that reads the init container's output
+    image: busybox:1.37.0     # Same lightweight image (pinned version!)
+    command:                # Read the file written by the init container, then sleep
+    - sh
+    - -c
+    - cat /work-dir/init-output.txt && sleep 3600  # Display init output, then stay alive
+    volumeMounts:           # Mount the same shared volume
+    - name: shared-data     # Same volume name — shares data with the init container
+      mountPath: /work-dir  # Path inside the main container
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "25m"
+      limits:
+        memory: "64Mi"
+        cpu: "50m"
+
+  volumes:                  # Volumes available to all containers in this Pod
+  - name: shared-data       # Volume name referenced by volumeMounts above
+    emptyDir: {}            # emptyDir — created when Pod is assigned to a node, deleted when Pod is removed
+
+# Key points:
+# 1. Init containers MUST complete successfully before main containers start
+# 2. If an init container fails, Kubernetes restarts the Pod (subject to restartPolicy)
+# 3. Init containers run in order — each must succeed before the next one starts
+# 4. emptyDir volumes are shared between init and main containers within the same Pod
+# 5. Use case examples: database migrations, config generation, dependency checks

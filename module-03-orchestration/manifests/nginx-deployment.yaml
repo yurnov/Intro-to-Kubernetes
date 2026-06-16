@@ -1,0 +1,49 @@
+# nginx-deployment.yaml — Deployment with rolling update strategy
+# A Deployment provides declarative updates for Pods and ReplicaSets.
+# This manifest configures a rolling update strategy to achieve
+# zero-downtime deployments by gradually replacing old Pods with new ones.
+
+apiVersion: apps/v1         # 'apps' API group — stable
+kind: Deployment            # Resource type: Deployment
+metadata:
+  name: nginx-deployment    # Name of the Deployment
+  namespace: training       # Dedicated namespace for all lab exercises
+  labels:
+    app: nginx              # Labels on the Deployment itself
+    module: "03"            # Track which module this belongs to
+spec:
+  replicas: 3               # Desired number of Pod replicas running at all times
+  selector:                 # How the Deployment finds which Pods it manages
+    matchLabels:
+      app: nginx            # Must match the Pod template labels below
+  strategy:                 # Defines how Pods are replaced during updates
+    type: RollingUpdate     # Gradually replace old Pods with new ones (default)
+    rollingUpdate:
+      maxSurge: 1           # At most 1 extra Pod above the desired count during update
+      maxUnavailable: 0     # Zero Pods unavailable during update (ensures full capacity)
+  template:                 # Pod template — defines what each replica looks like
+    metadata:
+      labels:
+        app: nginx          # These labels MUST match spec.selector.matchLabels
+    spec:
+      containers:
+      - name: nginx         # Container name (must be unique within the Pod)
+        image: nginx:1.30.0   # Container image from Docker Hub (pinned version!)
+        ports:
+        - containerPort: 80 # Port the container listens on
+          protocol: TCP     # Protocol (TCP is the default)
+        resources:          # Resource requests/limits (best practice to always include)
+          requests:
+            memory: "64Mi"  # Minimum memory guaranteed to the container
+            cpu: "50m"      # Minimum CPU guaranteed (50 millicores = 0.05 CPU)
+          limits:
+            memory: "128Mi" # Maximum memory allowed (OOMKill if exceeded)
+            cpu: "100m"     # Maximum CPU allowed (throttled if exceeded)
+
+# Key points:
+# 1. The Deployment creates a ReplicaSet, which creates the Pods
+# 2. spec.selector.matchLabels MUST match spec.template.metadata.labels
+# 3. maxSurge: 1 + maxUnavailable: 0 = safe rolling update (always at full capacity)
+# 4. To update the image: kubectl set image deployment/nginx-deployment nginx=nginx:1.30 -n training
+# 5. To rollback: kubectl rollout undo deployment/nginx-deployment -n training
+# 6. To check status: kubectl rollout status deployment/nginx-deployment -n training

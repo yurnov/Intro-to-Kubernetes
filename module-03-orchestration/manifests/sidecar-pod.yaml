@@ -1,0 +1,58 @@
+# sidecar-pod.yaml — Pod with a sidecar container for log shipping
+# The sidecar pattern runs a helper container alongside the main application.
+# Here, nginx serves web traffic while a busybox sidecar tails the access log.
+# This pattern is common for logging, monitoring, and proxy use cases.
+
+apiVersion: v1              # Core API group — stable, production-ready
+kind: Pod                   # Resource type: Pod
+metadata:
+  name: sidecar-demo        # Unique name for this Pod within the namespace
+  namespace: training       # Dedicated namespace for all lab exercises
+  labels:                   # Labels are key-value pairs used for selection and organization
+    app: sidecar-demo       # Common convention: 'app' label identifies the application
+    module: "03"            # Track which module this belongs to
+spec:
+  containers:               # List of containers to run in this Pod (all run concurrently)
+  - name: nginx             # Main application container — serves web traffic
+    image: nginx:1.30.0       # Container image from Docker Hub (pinned version!)
+    ports:
+    - containerPort: 80     # Port the container listens on (informational, not enforced)
+      protocol: TCP         # Protocol (TCP is the default)
+    volumeMounts:           # Mount the shared log volume
+    - name: log-volume      # Must match the volume name defined below
+      mountPath: /var/log/nginx  # nginx writes access.log and error.log here
+    resources:              # Resource requests/limits (best practice to always include)
+      requests:
+        memory: "64Mi"      # Minimum memory guaranteed
+        cpu: "50m"          # Minimum CPU guaranteed (50 millicores = 0.05 CPU)
+      limits:
+        memory: "128Mi"     # Maximum memory allowed (OOMKill if exceeded)
+        cpu: "100m"         # Maximum CPU allowed (throttled if exceeded)
+
+  - name: log-reader        # Sidecar container — reads nginx logs in real time
+    image: busybox:1.37.0     # Lightweight image for shell tasks (pinned version!)
+    command:                # Tail the nginx access log continuously
+    - sh
+    - -c
+    - tail -f /var/log/nginx/access.log  # Stream new log entries as they appear
+    volumeMounts:           # Mount the same shared volume to access nginx logs
+    - name: log-volume      # Same volume name — shares data with the nginx container
+      mountPath: /var/log/nginx  # Same path so sidecar sees nginx's log files
+    resources:
+      requests:
+        memory: "32Mi"      # Sidecar needs fewer resources than the main container
+        cpu: "25m"
+      limits:
+        memory: "64Mi"
+        cpu: "50m"
+
+  volumes:                  # Volumes available to all containers in this Pod
+  - name: log-volume        # Volume name referenced by volumeMounts above
+    emptyDir: {}            # emptyDir — ephemeral storage shared between containers
+
+# Key points:
+# 1. Both containers share the same network namespace (localhost) and can share volumes
+# 2. The sidecar pattern keeps concerns separated — nginx serves, sidecar ships logs
+# 3. emptyDir is created when the Pod starts and deleted when the Pod is removed
+# 4. In production, the sidecar might forward logs to Elasticsearch, Loki, or Splunk
+# 5. View sidecar logs: kubectl logs sidecar-demo -c log-reader -n training

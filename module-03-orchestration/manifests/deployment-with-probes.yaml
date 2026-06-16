@@ -1,0 +1,76 @@
+# deployment-with-probes.yaml — Deployment with liveness and readiness probes
+# Health probes let Kubernetes know when your application is alive and ready
+# for traffic. This manifest uses exec probes that check for files, making it
+# easy to simulate failures by deleting the files during the lab exercises.
+
+apiVersion: apps/v1         # 'apps' API group — stable
+kind: Deployment            # Resource type: Deployment
+metadata:
+  name: probed-app          # Name of the Deployment
+  namespace: training       # Dedicated namespace for all lab exercises
+  labels:
+    app: probed-app         # Labels on the Deployment itself
+    module: "03"            # Track which module this belongs to
+spec:
+  replicas: 2               # Desired number of Pod replicas
+  selector:                 # How the Deployment finds which Pods it manages
+    matchLabels:
+      app: probed-app       # Must match the Pod template labels below
+  template:                 # Pod template — defines what each replica looks like
+    metadata:
+      labels:
+        app: probed-app     # These labels MUST match spec.selector.matchLabels
+    spec:
+      containers:
+      - name: app           # Container name (must be unique within the Pod)
+        image: busybox:1.37.0  # Lightweight image for shell tasks (pinned version!)
+        command:             # Startup command: create probe files and loop forever
+        - sh
+        - -c
+        - |
+          touch /tmp/healthy
+          touch /tmp/ready
+          echo "App started"
+          while true; do sleep 5; done
+
+        # Liveness probe — restarts the container if it becomes unhealthy
+        # This exec probe checks for a file; if missing, the container is restarted.
+        # Simulate failure: kubectl exec <pod> -n training -- rm /tmp/healthy
+        livenessProbe:
+          exec:                     # Exec probe runs a command inside the container
+            command:
+            - cat
+            - /tmp/healthy          # Succeeds (exit 0) only if this file exists
+          initialDelaySeconds: 5    # Wait 5s after container start before first check
+          periodSeconds: 5          # Check every 5 seconds
+          failureThreshold: 3       # Restart container after 3 consecutive failures
+          timeoutSeconds: 2         # Probe times out after 2 seconds
+
+        # Readiness probe — controls whether Pod receives traffic from Services
+        # If readiness fails, the Pod is removed from Service endpoints (no traffic).
+        # Simulate failure: kubectl exec <pod> -n training -- rm /tmp/ready
+        readinessProbe:
+          exec:                     # Exec probe checks for a different file
+            command:
+            - cat
+            - /tmp/ready            # Succeeds (exit 0) only if this file exists
+          initialDelaySeconds: 5    # Wait 5s before first readiness check
+          periodSeconds: 5          # Check every 5 seconds
+          failureThreshold: 3       # Mark unready after 3 consecutive failures
+          timeoutSeconds: 2         # Probe times out after 2 seconds
+
+        resources:          # Resource requests/limits (best practice to always include)
+          requests:
+            memory: "32Mi"  # Minimum memory guaranteed
+            cpu: "25m"      # Minimum CPU guaranteed (25 millicores)
+          limits:
+            memory: "64Mi"  # Maximum memory allowed (OOMKill if exceeded)
+            cpu: "50m"      # Maximum CPU allowed (throttled if exceeded)
+
+# Key points:
+# 1. Liveness probe: "Is the container still running?" — restart if not
+# 2. Readiness probe: "Is the container ready to serve traffic?" — remove from Service if not
+# 3. Both probes use exec (file check) so failures can be easily simulated
+# 4. To test liveness failure: kubectl exec <pod> -n training -- rm /tmp/healthy
+# 5. To test readiness failure: kubectl exec <pod> -n training -- rm /tmp/ready
+# 6. After restart, the container recreates both files (liveness auto-recovers)
