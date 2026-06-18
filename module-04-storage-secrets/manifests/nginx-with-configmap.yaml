@@ -1,0 +1,74 @@
+# nginx-with-configmap.yaml — Nginx Deployment mounting a ConfigMap
+# Demonstrates how to inject configuration files into a Pod using a ConfigMap volume.
+# The nginx configuration and HTML are served from the ConfigMap.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-configured
+  namespace: training
+  labels:
+    app: nginx-custom
+    module: "04"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-custom
+  template:
+    metadata:
+      labels:
+        app: nginx-custom
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.30.0
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        volumeMounts:
+        # Mount the custom nginx config
+        - name: nginx-config-volume
+          mountPath: /etc/nginx/conf.d       # Override the default nginx config
+          readOnly: true
+        # Mount the custom HTML page
+        - name: nginx-html-volume
+          mountPath: /usr/share/nginx/html    # Override the default HTML
+          readOnly: true
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "64Mi"
+          limits:
+            cpu: "200m"
+            memory: "128Mi"
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
+      volumes:
+      # Volume for the nginx configuration file
+      - name: nginx-config-volume
+        configMap:
+          name: nginx-config               # References the ConfigMap
+          items:
+          - key: default.conf              # Key from the ConfigMap
+            path: default.conf             # Filename in the mounted directory
+
+      # Volume for the HTML page
+      - name: nginx-html-volume
+        configMap:
+          name: nginx-config               # Same ConfigMap, different key
+          items:
+          - key: index.html                # Key from the ConfigMap
+            path: index.html               # Filename in the mounted directory
+
+# Key points:
+# 1. Two different volumeMounts reference the same ConfigMap but mount different keys
+# 2. Using 'items' lets you select specific keys and control the filename
+# 3. readOnly: true is a security best practice for config files
+# 4. Changes to the ConfigMap will automatically update the mounted files
+#    (but nginx needs a reload to pick up config changes)

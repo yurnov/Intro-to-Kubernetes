@@ -1,0 +1,28 @@
+# pvc.yaml — PersistentVolumeClaim requesting 1Gi of storage
+# A PVC is a user's request for persistent storage.
+# It will be dynamically provisioned by the default StorageClass.
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: training
+  labels:
+    app: postgres
+    module: "04"
+spec:
+  accessModes:
+  - ReadWriteOnce              # Can be mounted read-write by a single node
+  resources:
+    requests:
+      storage: 1Gi             # Request 1 GiB of storage
+  # storageClassName: standard # Omitted to use the default StorageClass
+  # In minikube: 'standard' (hostpath provisioner)
+  # In kind: 'standard' (rancher local-path provisioner)
+  # In cloud: depends on the provider (gp2, pd-standard, default, etc.)
+
+# Key points:
+# 1. The PVC will be bound to a PV that meets the requirements
+# 2. With dynamic provisioning, a PV is created automatically
+# 3. ReadWriteOnce means only one node can mount it at a time
+# 4. The storage request is the minimum size; actual PV may be larger

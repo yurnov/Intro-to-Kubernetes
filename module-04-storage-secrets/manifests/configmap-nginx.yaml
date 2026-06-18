@@ -1,0 +1,58 @@
+# configmap-nginx.yaml — ConfigMap with custom nginx configuration
+# Demonstrates externalizing configuration from container images.
+# This ConfigMap contains a custom nginx server block.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: training
+  labels:
+    app: nginx-custom
+    module: "04"
+data:
+  # Custom nginx configuration file
+  default.conf: |
+    server {
+        listen       80;
+        server_name  localhost;
+
+        location / {
+            root   /usr/share/nginx/html;
+            index  index.html;
+        }
+
+        # Custom health check endpoint
+        location /healthz {
+            access_log off;
+            return 200 "healthy\n";
+            add_header Content-Type text/plain;
+        }
+
+        # Custom info endpoint
+        location /info {
+            return 200 "Server: nginx\nConfigured via: Kubernetes ConfigMap\nModule: 04 - Storage and Secrets\n";
+            add_header Content-Type text/plain;
+        }
+    }
+
+  # Custom HTML page
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Kubernetes Training - Module 4</title>
+    </head>
+    <body>
+        <h1>Welcome to Module 4: Storage and Secrets</h1>
+        <p>This page is served by nginx with a ConfigMap-based configuration.</p>
+        <p>Visit <a href="/info">/info</a> for server details.</p>
+        <p>Visit <a href="/healthz">/healthz</a> for health check.</p>
+    </body>
+    </html>
+
+# Key points:
+# 1. Each key in 'data' becomes a file when mounted as a volume
+# 2. The '|' syntax preserves multi-line strings in YAML
+# 3. ConfigMaps are not meant for sensitive data — use Secrets for that
+# 4. ConfigMap data is limited to 1 MiB total

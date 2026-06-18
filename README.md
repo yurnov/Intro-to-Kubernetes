@@ -15,13 +15,12 @@ A hands-on training course designed to take participants from container basics t
 | 1 | [Introduction](module-01-introduction/README.md) | 90 min | Containers, K8s overview, managed services, installation |
 | 2 | [Architecture and Tools](module-02-architecture/README.md) | 90 min | Components, namespaces, kubectl, operators |
 | 3 | [Orchestration](module-03-orchestration/README.md) | 90 min | Pods, deployments, services, probes, limits |
-| 4 | Storage and Secrets | 90 min | PV/PVC, StorageClass, ConfigMaps, Secrets |
+| 4 | [Storage and Secrets](module-04-storage-secrets/README.md) | 90 min | PV/PVC, StorageClass, ConfigMaps, Secrets |
 | 5 | Networking | 90 min | CNI, DNS, Gateway API, NetworkPolicies |
 | 6 | RBAC and Node Management | 90 min | ServiceAccounts, Roles, node draining, affinity |
 | 7 | Advanced Abstractions & CI/CD | 90 min | StatefulSet, DaemonSet, CronJob, Helm, ArgoCD |
 | 8 | Logging, Monitoring & Troubleshooting | 90 min | Prometheus, Grafana, EFK, debugging |
-<!--| 4 | [Storage and Secrets](module-04-storage-secrets/) | 90 min | PV/PVC, StorageClass, ConfigMaps, Secrets |
-| 5 | [Networking](module-05-networking/) | 90 min | CNI, DNS, Gateway API, NetworkPolicies |
+<!--| 5 | [Networking](module-05-networking/) | 90 min | CNI, DNS, Gateway API, NetworkPolicies |
 | 6 | [RBAC and Node Management](module-06-rbac-nodes/) | 90 min | ServiceAccounts, Roles, node draining, affinity |
 | 7 | [Advanced Abstractions & CI/CD](module-07-advanced-cicd/) | 90 min | StatefulSet, DaemonSet, CronJob, Helm, ArgoCD |
 | 8 | [Logging, Monitoring & Troubleshooting](module-08-logging-troubleshooting/) | 90 min | Prometheus, Grafana, EFK, debugging | -->

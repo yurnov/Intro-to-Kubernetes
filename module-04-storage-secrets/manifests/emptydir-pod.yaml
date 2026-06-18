@@ -1,0 +1,66 @@
+# emptydir-pod.yaml — Pod with emptyDir volume shared between two containers
+# Demonstrates how an emptyDir volume provides temporary shared storage within a Pod.
+# The volume is created when the Pod starts and deleted when the Pod is removed.
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: emptydir-demo
+  namespace: training
+  labels:
+    app: emptydir-demo
+    module: "04"
+spec:
+  containers:
+  # Writer container: writes data to the shared volume
+  - name: writer
+    image: busybox:1.37.0
+    command: ["/bin/sh", "-c"]
+    args:
+      - |
+        echo "Hello from the writer container!" > /shared-data/message.txt
+        echo "Written at: $(date)" >> /shared-data/message.txt
+        echo "Hostname: $(hostname)" >> /shared-data/message.txt
+        sleep 3600
+    volumeMounts:
+    - name: shared-volume          # Must match the volume name below
+      mountPath: /shared-data      # Path inside this container
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "32Mi"
+      limits:
+        cpu: "100m"
+        memory: "64Mi"
+
+  # Reader container: reads data from the shared volume
+  - name: reader
+    image: busybox:1.37.0
+    command: ["/bin/sh", "-c"]
+    args:
+      - |
+        echo "Waiting for data..."
+        while [ ! -f /shared-data/message.txt ]; do sleep 1; done
+        echo "=== Data from writer ==="
+        cat /shared-data/message.txt
+        sleep 3600
+    volumeMounts:
+    - name: shared-volume          # Same volume name — shared with the writer
+      mountPath: /shared-data      # Can use the same or different mountPath
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "32Mi"
+      limits:
+        cpu: "100m"
+        memory: "64Mi"
+
+  volumes:
+  - name: shared-volume            # Volume name referenced by volumeMounts
+    emptyDir: {}                   # emptyDir: ephemeral, dies with the Pod
+
+# Key points:
+# 1. Both containers share the same emptyDir volume
+# 2. Data written by 'writer' is immediately readable by 'reader'
+# 3. If the Pod is deleted, ALL data in the emptyDir is lost
+# 4. emptyDir is backed by the node's filesystem (or memory with medium: Memory)

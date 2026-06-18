@@ -1,0 +1,74 @@
+# postgres-with-pvc.yaml — PostgreSQL Deployment with persistent storage
+# Demonstrates how a database uses a PVC to survive Pod restarts.
+# The data directory is mounted from the PVC so data persists.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: training
+  labels:
+    app: postgres
+    module: "04"
+spec:
+  replicas: 1                    # Databases typically run a single replica
+  selector:
+    matchLabels:
+      app: postgres
+  strategy:
+    type: Recreate               # Don't use RollingUpdate for databases with PVCs
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:18.3
+        ports:
+        - containerPort: 5432
+          protocol: TCP
+        env:
+        - name: POSTGRES_DB
+          value: "trainingdb"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials     # References the db-secret.yaml Secret
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials     # References the db-secret.yaml Secret
+              key: password
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"  # Subdirectory to avoid permission issues
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data    # PostgreSQL data directory
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc      # References the PVC from pvc.yaml
+
+# Key points:
+# 1. strategy.type: Recreate — ensures old Pod is fully stopped before new one starts
+#    (avoids two Pods trying to mount the same RWO PVC simultaneously)
+# 2. PGDATA is set to a subdirectory to avoid PostgreSQL permission issues with mount points
+# 3. Credentials come from a Secret (db-credentials) — not hardcoded!
+# 4. The PVC must exist before deploying this Deployment
