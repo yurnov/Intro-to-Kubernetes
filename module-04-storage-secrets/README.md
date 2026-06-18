@@ -696,7 +696,7 @@ kubectl apply -f bonus-app.yaml
 
 # Test the frontend from a curl-capable image (nginx itself doesn't have curl)
 kubectl run verify-curl --image=curlimages/curl:8.19.0 --restart=Never -it --rm -- \
-  curl -s http://frontend-svc/
+  -s http://frontend-svc/
 ```
 
 Cleanup:
