@@ -1,0 +1,49 @@
+# kind-config-cilium.yaml — kind profile for Module 5 NetworkPolicy lab
+#
+# Why a separate config?
+# The default `kind-config.yaml` ships with kindnet, which does NOT enforce
+# NetworkPolicy. To exercise NetworkPolicies you need a CNI that does — this
+# profile disables the default CNI so Cilium can take over.
+#
+# Use ONLY for the NetworkPolicy section of Lab 5. Recreate the default
+# cluster from `kind-config.yaml` for all other modules.
+#
+# Usage:
+#   kind delete cluster --name training
+#   kind create cluster --name training --config kind-config-cilium.yaml
+#   helm repo add cilium https://helm.cilium.io/
+#   helm install cilium cilium/cilium --version 1.19.3 \
+#     --namespace kube-system \
+#     --set image.pullPolicy=IfNotPresent \
+#     --set ipam.mode=kubernetes
+#   kubectl wait --for=condition=Ready pod -l k8s-app=cilium -n kube-system --timeout=180s
+#
+# Pre-loading the Cilium image is optional but speeds up cluster bring-up:
+#   docker pull quay.io/cilium/cilium:v1.19.3
+#   kind load docker-image quay.io/cilium/cilium:v1.19.3 --name training
+
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  disableDefaultCNI: true        # No kindnet — Cilium will be the CNI
+  podSubnet: "10.244.0.0/16"     # Same Pod CIDR as the default profile
+nodes:
+- role: control-plane
+  image: kindest/node:v1.35.1
+  kubeadmConfigPatches:
+  - |
+    kind: InitConfiguration
+    nodeRegistration:
+      kubeletExtraArgs:
+        node-labels: "ingress-ready=true"
+  extraPortMappings:
+  - containerPort: 80
+    hostPort: 80
+    protocol: TCP
+  - containerPort: 443
+    hostPort: 443
+    protocol: TCP
+- role: worker
+  image: kindest/node:v1.35.1
+- role: worker
+  image: kindest/node:v1.35.1

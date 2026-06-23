@@ -1,0 +1,55 @@
+# web-app-a.yaml — Deployment + Service for web application A
+# Used in Lab 5 for DNS discovery and Ingress routing exercises.
+# Deployed in the 'training' namespace.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app-a
+  namespace: training
+  labels:
+    app: web-app-a                # Label identifying the application
+spec:
+  replicas: 2                     # Run 2 replicas for availability
+  selector:
+    matchLabels:
+      app: web-app-a              # Must match the Pod template labels
+  template:
+    metadata:
+      labels:
+        app: web-app-a            # Labels for Pod selection by Service
+    spec:
+      containers:
+      - name: http-echo
+        image: hashicorp/http-echo:0.2.3         # Echoes text on HTTP requests
+        args:
+        - "-text=web-app-a"                # Response text identifies the app
+        - "-listen=:80"                    # Listen on port 80
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "25m"
+          limits:
+            memory: "64Mi"
+            cpu: "50m"
+---
+# Service exposes web-app-a within the cluster
+# DNS record: web-app-a.training.svc.cluster.local
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-app-a
+  namespace: training
+  labels:
+    app: web-app-a
+spec:
+  type: ClusterIP                  # Internal-only access (default)
+  selector:
+    app: web-app-a                 # Route traffic to Pods with this label
+  ports:
+  - port: 80                      # Service port
+    targetPort: 80                 # Container port
+    protocol: TCP

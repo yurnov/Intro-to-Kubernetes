@@ -1,0 +1,40 @@
+# networkpolicy-allow-frontend.yaml — NetworkPolicy allowing frontend → backend traffic
+# This policy selects Pods labeled 'role=backend' and allows incoming
+# traffic ONLY from Pods labeled 'role=frontend' on port 5678.
+#
+# Combined with the default-deny policy, this creates a setup where:
+# - Frontend Pods CAN reach backend Pods (port 5678)
+# - All other Pods (e.g., 'rogue') CANNOT reach backend Pods
+#
+# IMPORTANT: Requires a CNI plugin that enforces NetworkPolicies (e.g. Cilium
+# or Calico). Does NOT work with Flannel or kindnet — the API server accepts
+# the resource but no traffic is actually blocked. Lab 5 recreates the cluster
+# with kind-config-cilium.yaml + Cilium for this section.
+
+apiVersion: networking.k8s.io/v1        # Networking API group — stable
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-to-backend
+  namespace: training
+spec:
+  podSelector:
+    matchLabels:
+      role: backend                      # This policy applies to backend Pods
+  policyTypes:
+  - Ingress                              # Control incoming traffic
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          role: frontend                 # Allow traffic from frontend Pods only
+    ports:
+    - protocol: TCP
+      port: 5678                         # Only on the http-echo port
+
+# How policies interact:
+#   1. default-deny-ingress: blocks ALL ingress to ALL Pods
+#   2. allow-frontend-to-backend: adds an exception for backend Pods
+#      → frontend (role=frontend) can reach backend (role=backend) on port 5678
+#      → rogue (role=rogue) is still blocked by the default deny
+#
+# Policies are ADDITIVE — the allowed traffic is the UNION of all policies.

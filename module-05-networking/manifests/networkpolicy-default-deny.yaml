@@ -1,0 +1,23 @@
+# networkpolicy-default-deny.yaml — Default deny ingress NetworkPolicy
+# This policy selects ALL Pods in the namespace (empty podSelector)
+# and specifies Ingress as a policy type with NO ingress rules,
+# which means all incoming traffic to any Pod is denied.
+#
+# This is the recommended starting point for NetworkPolicy:
+# deny everything by default, then create specific allow policies.
+#
+# IMPORTANT: Requires a CNI plugin that enforces NetworkPolicies (e.g. Cilium
+# or Calico). Does NOT work with Flannel or kindnet — the API server accepts
+# the resource but no traffic is actually blocked. Lab 5 recreates the cluster
+# with kind-config-cilium.yaml + Cilium for this section.
+
+apiVersion: networking.k8s.io/v1        # Networking API group — stable
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: training
+spec:
+  podSelector: {}                        # Empty selector = ALL Pods in this namespace
+  policyTypes:
+  - Ingress                              # Apply to incoming traffic
+  # No 'ingress' rules specified = deny all incoming traffic

@@ -1,0 +1,39 @@
+# networkpolicy-allow-all-troubleshooting.yaml — TEMPORARY "allow-all" NetworkPolicy
+#
+# ⚠️  DEV / TROUBLESHOOTING ONLY — NEVER APPLY THIS IN PRODUCTION.
+#
+# A misconfigured (or simply forgotten) NetworkPolicy is one of the most common
+# causes of "my Pod can't reach X" in Kubernetes. Because policies are ADDITIVE
+# and a default-deny selects every Pod, a single leftover deny rule silently
+# blacks out traffic the API server still happily "accepts".
+#
+# When you suspect a NetworkPolicy is the culprit, apply this policy to OPEN UP
+# all ingress and egress for every Pod in the namespace. If connectivity comes
+# back, you've confirmed the problem is policy-related — then delete this and add
+# a properly scoped allow rule instead.
+#
+#   podSelector: {}            → selects ALL Pods in the namespace
+#   ingress: [{}] / egress:[{}] → an empty rule = "allow from/to anywhere"
+#
+# This is the NetworkPolicy equivalent of "chmod 777 to see if it's permissions"
+# — a diagnostic, not a fix. Leaving it in place defeats the entire purpose of
+# having NetworkPolicies, so remove it the moment you're done:
+#
+#   kubectl apply  -f manifests/networkpolicy-allow-all-troubleshooting.yaml   # open up
+#   # ...verify connectivity works again...
+#   kubectl delete -f manifests/networkpolicy-allow-all-troubleshooting.yaml   # lock back down
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-all-troubleshooting
+  namespace: training
+spec:
+  podSelector: {}                        # ALL Pods in the namespace
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - {}                                   # empty rule = allow ALL ingress
+  egress:
+  - {}                                   # empty rule = allow ALL egress

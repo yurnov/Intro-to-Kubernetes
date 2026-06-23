@@ -1,0 +1,62 @@
+# web-app-b.yaml — Deployment + Service for web application B
+# Deployed in a SEPARATE namespace ('app-b') to demonstrate
+# cross-namespace DNS resolution in Lab 5.
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: app-b                     # Dedicated namespace for app B
+  labels:
+    purpose: training              # Label for namespace selection
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app-b
+  namespace: app-b                 # Different namespace than app A
+  labels:
+    app: web-app-b
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-app-b
+  template:
+    metadata:
+      labels:
+        app: web-app-b
+    spec:
+      containers:
+      - name: http-echo
+        image: hashicorp/http-echo:0.2.3         # Echoes text on HTTP requests
+        args:
+        - "-text=web-app-b"                # Response text identifies the app
+        - "-listen=:80"                    # Listen on port 80
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "25m"
+          limits:
+            memory: "64Mi"
+            cpu: "50m"
+---
+# Service exposes web-app-b within the cluster
+# DNS record: web-app-b.app-b.svc.cluster.local
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-app-b
+  namespace: app-b
+  labels:
+    app: web-app-b
+spec:
+  type: ClusterIP
+  selector:
+    app: web-app-b
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP

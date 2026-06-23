@@ -1,0 +1,41 @@
+# debug-netshoot.yaml — Debug Pod with full networking toolkit
+# Uses the nicolaka/netshoot:v0.14 image which includes tools like:
+# curl, wget, nslookup, dig, ping, traceroute, tcpdump, iperf, etc.
+#
+# This Pod is used in Lab 5 for DNS troubleshooting, connectivity
+# testing, and network exploration.
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: netshoot-debug
+  namespace: training
+  labels:
+    app: netshoot-debug
+    purpose: debugging                   # Label for easy identification
+spec:
+  containers:
+  - name: netshoot
+    image: nicolaka/netshoot:v0.14             # Full networking debug toolkit
+    command:
+    - sleep
+    - "3600"                             # Keep the Pod running for 1 hour
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "50m"
+      limits:
+        memory: "128Mi"
+        cpu: "100m"
+
+# Usage:
+#   kubectl apply -f manifests/debug-netshoot.yaml
+#   kubectl exec -it netshoot-debug -n training -- bash
+#
+# Inside the Pod, useful commands:
+#   nslookup <service-name>
+#   dig @10.96.0.10 <fqdn>
+#   curl http://<service>:<port>
+#   ping <pod-ip>
+#   traceroute <pod-ip>
+#   tcpdump -i eth0
