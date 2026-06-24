@@ -1,0 +1,35 @@
+# pod-with-toleration.yaml — Pod with toleration for a tainted node
+# Taints on nodes act like locks — they prevent Pods from scheduling there.
+# Tolerations on Pods act like keys — they allow the Pod to "tolerate" the taint.
+#
+# This Pod tolerates the taint 'dedicated=training:NoSchedule' and uses
+# nodeSelector to prefer scheduling on nodes with disktype=ssd.
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: toleration-pod                           # Pod name
+  namespace: training
+  labels:
+    app: rbac-lab
+    exercise: node-management                    # Label to identify the exercise
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.30.0                            # Well-known web server image
+    ports:
+    - containerPort: 80
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "25m"
+      limits:
+        memory: "64Mi"
+        cpu: "50m"
+  tolerations:
+  - key: "dedicated"                             # Taint key to tolerate
+    operator: "Equal"                            # Match exact key=value
+    value: "training"                            # Taint value to match
+    effect: "NoSchedule"                         # Taint effect to tolerate
+  nodeSelector:
+    disktype: ssd                                # Schedule only on nodes with this label

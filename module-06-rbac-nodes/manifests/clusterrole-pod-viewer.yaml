@@ -1,0 +1,18 @@
+# clusterrole-pod-viewer.yaml — ClusterRole for viewing Pods across all namespaces
+# Unlike a Role, a ClusterRole is NOT namespaced — it can grant access cluster-wide.
+#
+# Use cases for ClusterRoles:
+#   - Access to non-namespaced resources (nodes, PVs)
+#   - Granting the same permissions across ALL namespaces (via ClusterRoleBinding)
+#   - Aggregation of permissions from multiple ClusterRoles
+
+apiVersion: rbac.authorization.k8s.io/v1       # RBAC API group — stable
+kind: ClusterRole
+metadata:
+  name: pod-viewer                              # Cluster-wide, so no namespace
+  labels:
+    app: rbac-lab
+rules:
+- apiGroups: [""]                               # Core API group
+  resources: ["pods"]                           # Only Pods — minimal privilege
+  verbs: ["get", "list", "watch"]               # Read-only access

@@ -1,0 +1,46 @@
+# deployment-node-affinity.yaml — Deployment with node affinity rules
+# Node affinity is the advanced version of nodeSelector.
+# It supports soft (preferred) and hard (required) scheduling constraints.
+#
+# This Deployment uses preferredDuringSchedulingIgnoredDuringExecution
+# to prefer nodes with disktype=ssd, but will schedule elsewhere if none available.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: affinity-demo                            # Deployment name
+  namespace: training
+  labels:
+    app: affinity-demo                           # Label for identification
+spec:
+  replicas: 3                                    # Run 3 replicas to see distribution
+  selector:
+    matchLabels:
+      app: affinity-demo                         # Must match Pod template labels
+  template:
+    metadata:
+      labels:
+        app: affinity-demo                       # Pod labels for selector matching
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.30.0                        # Well-known web server image
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "25m"
+          limits:
+            memory: "64Mi"
+            cpu: "50m"
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:   # Soft preference
+          - weight: 80                           # Weight 1-100 (higher = stronger preference)
+            preference:
+              matchExpressions:
+              - key: disktype                    # Node label key
+                operator: In                     # Operator: In, NotIn, Exists, DoesNotExist, Gt, Lt
+                values:
+                - ssd                            # Preferred value

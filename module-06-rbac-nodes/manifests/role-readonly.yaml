@@ -1,0 +1,17 @@
+# role-readonly.yaml — Role with read-only access to Pods and Services
+# This Role is namespaced — it only grants permissions within the 'training' namespace.
+#
+# RBAC model: Subject → RoleBinding → Role → Resources
+# This Role defines WHAT can be done (verbs) on WHICH resources.
+
+apiVersion: rbac.authorization.k8s.io/v1       # RBAC API group — stable
+kind: Role
+metadata:
+  name: pod-service-reader                      # Descriptive name for the Role
+  namespace: training
+  labels:
+    app: rbac-lab
+rules:
+- apiGroups: [""]                               # Core API group (Pods, Services, etc.)
+  resources: ["pods", "services"]               # Resources this Role grants access to
+  verbs: ["get", "list", "watch"]               # Read-only verbs — no create/update/delete

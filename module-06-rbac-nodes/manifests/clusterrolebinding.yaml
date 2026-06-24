@@ -1,0 +1,21 @@
+# clusterrolebinding.yaml — Binds the pod-viewer ClusterRole to the developer ServiceAccount
+# This grants the developer ServiceAccount read-only access to Pods in ALL namespaces.
+#
+# Note: A ClusterRoleBinding always grants cluster-wide access.
+# If you want to grant a ClusterRole's permissions in only one namespace,
+# use a RoleBinding instead (referencing the ClusterRole in roleRef).
+
+apiVersion: rbac.authorization.k8s.io/v1       # RBAC API group — stable
+kind: ClusterRoleBinding
+metadata:
+  name: developer-pod-viewer                    # Cluster-wide, so no namespace
+  labels:
+    app: rbac-lab
+subjects:
+- kind: ServiceAccount                          # Subject type
+  name: developer                               # The ServiceAccount
+  namespace: training                            # SA namespace (required for ClusterRoleBinding)
+roleRef:
+  kind: ClusterRole                             # Referencing a ClusterRole
+  name: pod-viewer                              # The ClusterRole to bind
+  apiGroup: rbac.authorization.k8s.io           # API group for RBAC resources

@@ -1,0 +1,22 @@
+# rolebinding.yaml — Binds the pod-service-reader Role to the developer ServiceAccount
+# This RoleBinding connects the Subject (developer SA) to the Role (pod-service-reader)
+# within the 'training' namespace.
+#
+# After applying this, Pods using the 'developer' ServiceAccount can
+# get, list, and watch Pods and Services in the training namespace.
+
+apiVersion: rbac.authorization.k8s.io/v1       # RBAC API group — stable
+kind: RoleBinding
+metadata:
+  name: developer-pod-service-reader            # Descriptive binding name
+  namespace: training
+  labels:
+    app: rbac-lab
+subjects:
+- kind: ServiceAccount                          # Subject type — can be User, Group, or SA
+  name: developer                               # The ServiceAccount we created
+  namespace: training                            # Namespace of the ServiceAccount
+roleRef:
+  kind: Role                                    # Referencing a namespaced Role (not ClusterRole)
+  name: pod-service-reader                      # The Role to bind
+  apiGroup: rbac.authorization.k8s.io           # API group for RBAC resources

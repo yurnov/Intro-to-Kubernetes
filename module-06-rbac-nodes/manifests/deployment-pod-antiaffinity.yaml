@@ -1,0 +1,47 @@
+# deployment-pod-antiaffinity.yaml — Deployment with Pod anti-affinity
+# Pod anti-affinity ensures Pods of this Deployment are spread across different nodes.
+# This is useful for high availability — if one node fails, not all replicas are lost.
+#
+# topologyKey: kubernetes.io/hostname means "spread across different hostnames (nodes)"
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spread-app                               # Deployment name
+  namespace: training
+  labels:
+    app: spread-app                              # Label for identification
+spec:
+  replicas: 3                                    # Run 3 replicas to see spreading behavior
+  selector:
+    matchLabels:
+      app: spread-app                            # Must match Pod template labels
+  template:
+    metadata:
+      labels:
+        app: spread-app                          # Pod labels for selector and anti-affinity matching
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.30.0                        # Well-known web server image
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "25m"
+          limits:
+            memory: "64Mi"
+            cpu: "50m"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:    # Soft anti-affinity
+          - weight: 100                          # Maximum weight — strongly prefer spreading
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app                       # Match Pods with the same 'app' label
+                  operator: In
+                  values:
+                  - spread-app                   # Avoid co-locating with other spread-app Pods
+              topologyKey: kubernetes.io/hostname # Spread across different nodes

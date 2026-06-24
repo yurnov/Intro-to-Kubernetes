@@ -1,0 +1,28 @@
+# pod-with-sa.yaml — Pod using the 'developer' ServiceAccount
+# This Pod runs with the identity of the 'developer' SA,
+# which means it inherits the RBAC permissions bound to that SA.
+#
+# The SA token is automatically mounted at /var/run/secrets/kubernetes.io/serviceaccount/
+# and can be used to authenticate to the Kubernetes API from within the Pod.
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dev-pod                                  # Pod name
+  namespace: training
+  labels:
+    app: rbac-lab
+    role: developer                              # Label to identify purpose
+spec:
+  serviceAccountName: developer                  # Use the custom ServiceAccount
+  containers:
+  - name: kubectl                                # Container with kubectl for testing
+    image: busybox:1.37.0                          # Lightweight utility image
+    command: ["sleep", "3600"]                   # Keep the Pod running for testing
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "25m"
+      limits:
+        memory: "64Mi"
+        cpu: "50m"
