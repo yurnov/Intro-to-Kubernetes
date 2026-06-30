@@ -1,0 +1,37 @@
+# argocd-application.yaml — ArgoCD Application resource
+# Defines a GitOps application that ArgoCD monitors and syncs.
+# ArgoCD watches the Git repository and ensures the cluster state matches.
+# This is for demonstration/reference — requires ArgoCD to be installed.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sample-app
+  namespace: argocd                  # ArgoCD Applications live in the argocd namespace
+  labels:
+    app: sample-app
+    module: "07"
+spec:
+  project: default                   # ArgoCD project (default is built-in)
+  source:
+    repoURL: https://github.com/argoproj/argocd-example-apps.git
+    targetRevision: HEAD             # Track the latest commit on default branch
+    path: guestbook                  # Path within the repo containing K8s manifests
+  destination:
+    server: https://kubernetes.default.svc    # Deploy to the local cluster
+    namespace: training              # Target namespace for deployed resources
+  syncPolicy:
+    automated:                       # Enable automatic sync (GitOps)
+      prune: true                    # Delete resources not in Git
+      selfHeal: true                 # Revert manual changes to match Git state
+    syncOptions:
+    - CreateNamespace=true           # Create the namespace if it doesn't exist
+
+# Key points:
+# 1. source.repoURL — Git repository containing Kubernetes manifests or Helm charts
+# 2. source.path — subdirectory within the repo to deploy from
+# 3. destination.server — target Kubernetes cluster API endpoint
+# 4. syncPolicy.automated — enables auto-sync (GitOps pull model)
+# 5. prune: true — removes resources from cluster that are no longer in Git
+# 6. selfHeal: true — reverts manual kubectl changes to match Git state
+# 7. This example uses ArgoCD's public demo repository (argocd-example-apps)

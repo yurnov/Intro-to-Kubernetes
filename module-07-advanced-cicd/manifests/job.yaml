@@ -1,0 +1,49 @@
+# job.yaml — One-time Job example
+# Runs a task to completion and then stops.
+# Unlike Deployments, Jobs are designed for finite tasks (batch processing, migrations).
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pi-calculator
+  namespace: training
+  labels:
+    app: pi-calculator               # Label identifying the application
+    module: "07"
+spec:
+  completions: 1                     # Number of successful completions needed
+  parallelism: 1                     # Number of Pods running concurrently
+  backoffLimit: 3                    # Retry up to 3 times on failure
+  activeDeadlineSeconds: 120         # Timeout: kill the Job after 2 minutes
+  ttlSecondsAfterFinished: 300       # Auto-delete Job 5 minutes after completion
+  template:
+    metadata:
+      labels:
+        app: pi-calculator
+    spec:
+      restartPolicy: OnFailure      # Restart the container on failure (not the Pod)
+      containers:
+      - name: pi
+        image: busybox:1.37.0
+        command:
+        - sh
+        - -c
+        - |
+          echo "Calculating pi to 100 decimal places..."
+          echo "scale=100; 4*a(1)" | bc -l
+          echo "Job completed successfully!"
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "32Mi"
+          limits:
+            cpu: "100m"
+            memory: "64Mi"
+
+# Key points:
+# 1. restartPolicy must be OnFailure or Never (not Always — that's for Deployments)
+# 2. backoffLimit: 3 — the Job fails permanently after 3 retries
+# 3. activeDeadlineSeconds: 120 — prevents runaway Jobs from consuming resources
+# 4. ttlSecondsAfterFinished: 300 — auto-cleanup after 5 minutes (keeps cluster tidy)
+# 5. completions: 1 — only one successful run is needed
+# 6. For parallel processing, increase completions and parallelism

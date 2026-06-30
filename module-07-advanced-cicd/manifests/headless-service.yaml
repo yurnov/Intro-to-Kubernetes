@@ -1,0 +1,29 @@
+# headless-service.yaml — Headless Service for StatefulSet
+# A headless Service (clusterIP: None) is required for StatefulSets.
+# It enables direct DNS resolution to individual Pods using ordinal naming:
+#   <pod-name>.<service-name>.<namespace>.svc.cluster.local
+# Example: web-0.nginx-headless.training.svc.cluster.local
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-headless
+  namespace: training
+  labels:
+    app: nginx-stateful              # Label identifying the application
+    module: "07"
+spec:
+  clusterIP: None                    # Headless Service — no cluster IP allocated
+  selector:
+    app: nginx-stateful              # Route traffic to Pods with this label
+  ports:
+  - port: 80                        # Service port
+    targetPort: 80                   # Container port
+    protocol: TCP
+    name: web                        # Port name (required for StatefulSets)
+
+# Key points:
+# 1. clusterIP: None — makes this a headless Service (no virtual IP, no load balancing)
+# 2. DNS creates A records for each Pod: web-0.nginx-headless.training.svc.cluster.local
+# 3. The Service name must match the StatefulSet's spec.serviceName field
+# 4. Without a headless Service, StatefulSet Pods won't get stable DNS names

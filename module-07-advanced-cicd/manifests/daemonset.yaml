@@ -1,0 +1,52 @@
+# daemonset.yaml — DaemonSet for log collection on every node
+# Runs exactly one Pod per node (or subset of nodes).
+# Common use case: log collectors, monitoring agents, network plugins.
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: log-collector
+  namespace: training
+  labels:
+    app: log-collector               # Label identifying the application
+    module: "07"
+spec:
+  selector:
+    matchLabels:
+      app: log-collector             # Must match the Pod template labels
+  template:
+    metadata:
+      labels:
+        app: log-collector           # Labels for Pod selection
+    spec:
+      containers:
+      - name: log-collector
+        image: busybox:1.37.0          # Lightweight utility image
+        command:
+        - sh
+        - -c
+        - |
+          echo "Log collector started on $(hostname)"
+          while true; do
+            echo "[$(date)] Collecting logs from $(hostname)..."
+            sleep 30
+          done
+        resources:
+          requests:
+            cpu: "25m"
+            memory: "32Mi"
+          limits:
+            cpu: "50m"
+            memory: "64Mi"
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule           # Allow scheduling on control-plane nodes too
+
+# Key points:
+# 1. DaemonSet ensures exactly one Pod runs on each node in the cluster
+# 2. When a new node joins the cluster, a Pod is automatically scheduled on it
+# 3. When a node is removed, the Pod is garbage collected
+# 4. Tolerations allow the DaemonSet to run on control-plane nodes (tainted by default)
+# 5. You can restrict to specific nodes using nodeSelector or affinity rules
+# 6. Update strategy defaults to RollingUpdate (one node at a time)

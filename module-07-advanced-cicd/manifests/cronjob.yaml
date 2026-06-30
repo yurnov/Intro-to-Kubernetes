@@ -1,0 +1,56 @@
+# cronjob.yaml — CronJob that runs every minute
+# Creates a Job on a cron schedule. Useful for periodic tasks like
+# backups, report generation, cleanup, and health checks.
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: periodic-task
+  namespace: training
+  labels:
+    app: periodic-task               # Label identifying the application
+    module: "07"
+spec:
+  schedule: "*/1 * * * *"           # Run every minute (cron syntax)
+  concurrencyPolicy: Forbid          # Don't start a new Job if previous is still running
+  startingDeadlineSeconds: 60        # Skip the run if it can't start within 60 seconds
+  successfulJobsHistoryLimit: 3      # Keep last 3 successful Job records
+  failedJobsHistoryLimit: 2          # Keep last 2 failed Job records
+  jobTemplate:
+    spec:
+      backoffLimit: 2                # Retry up to 2 times per Job
+      activeDeadlineSeconds: 45      # Each Job must complete within 45 seconds
+      template:
+        metadata:
+          labels:
+            app: periodic-task
+        spec:
+          restartPolicy: OnFailure   # Restart container on failure
+          containers:
+          - name: task
+            image: busybox:1.37.0
+            command:
+            - sh
+            - -c
+            - |
+              echo "=== Periodic task started at $(date) ==="
+              echo "Hostname: $(hostname)"
+              echo "Task completed successfully!"
+            resources:
+              requests:
+                cpu: "25m"
+                memory: "32Mi"
+              limits:
+                cpu: "50m"
+                memory: "64Mi"
+
+# Key points:
+# 1. schedule uses standard cron format: minute hour day-of-month month day-of-week
+# 2. concurrencyPolicy options:
+#    - Allow:   permits concurrent Jobs (default)
+#    - Forbid:  skips new Job if previous is still running
+#    - Replace: kills running Job and starts a new one
+# 3. successfulJobsHistoryLimit and failedJobsHistoryLimit control how many
+#    completed Jobs are retained (for log inspection)
+# 4. CronJobs create Jobs, which create Pods — three levels of resources
+# 5. Use 'kubectl create job --from=cronjob/periodic-task test-run' to trigger manually

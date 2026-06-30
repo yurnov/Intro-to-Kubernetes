@@ -1,0 +1,57 @@
+# statefulset.yaml — StatefulSet with 3 replicas and per-replica persistent storage
+# Demonstrates StatefulSet guarantees: stable network identity, ordered deployment,
+# and persistent storage via volumeClaimTemplates.
+# Requires the headless-service.yaml to be deployed first.
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: web
+  namespace: training
+  labels:
+    app: nginx-stateful              # Label identifying the application
+    module: "07"
+spec:
+  serviceName: nginx-headless        # Must match the headless Service name
+  replicas: 3                        # Creates web-0, web-1, web-2 in order
+  selector:
+    matchLabels:
+      app: nginx-stateful            # Must match the Pod template labels
+  template:
+    metadata:
+      labels:
+        app: nginx-stateful          # Labels for Pod selection by Service
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.30.0            # Pinned version, not :latest
+        ports:
+        - containerPort: 80
+          name: web                  # Named port matching Service port name
+        volumeMounts:
+        - name: www-data
+          mountPath: /usr/share/nginx/html    # Each Pod gets its own PVC
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "64Mi"
+          limits:
+            cpu: "100m"
+            memory: "128Mi"
+  volumeClaimTemplates:              # Automatically creates a PVC per replica
+  - metadata:
+      name: www-data                 # PVC name: www-data-web-0, www-data-web-1, etc.
+    spec:
+      accessModes:
+      - ReadWriteOnce                # Each PVC is bound to a single Pod
+      resources:
+        requests:
+          storage: 100Mi             # Small volume for demonstration purposes
+
+# Key points:
+# 1. Pods are created in order: web-0 → web-1 → web-2
+# 2. Pods are deleted in reverse order: web-2 → web-1 → web-0
+# 3. Each Pod gets a stable DNS name: web-0.nginx-headless.training.svc.cluster.local
+# 4. volumeClaimTemplates creates a PVC per Pod (www-data-web-0, www-data-web-1, etc.)
+# 5. PVCs persist even when Pods or the StatefulSet are deleted — data is preserved
+# 6. spec.serviceName must reference an existing headless Service

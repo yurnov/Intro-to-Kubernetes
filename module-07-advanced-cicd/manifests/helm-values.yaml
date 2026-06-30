@@ -1,0 +1,45 @@
+# helm-values.yaml — Custom values file for Helm exercise
+# Overrides default values when installing the Bitnami nginx Helm chart.
+# Usage: helm install my-nginx bitnami/nginx -f helm-values.yaml -n training
+
+# Number of nginx replicas
+replicaCount: 2
+
+# Container image configuration
+image:
+  registry: docker.io
+  repository: bitnami/nginx
+  tag: latest                        # Bitnami manages the image tag
+
+# Service configuration
+service:
+  type: ClusterIP                    # Internal-only access (use NodePort for external)
+  ports:
+    http: 80                         # Service port
+
+# Resource requests and limits for each replica
+resources:
+  requests:
+    cpu: "50m"
+    memory: "64Mi"
+  limits:
+    cpu: "100m"
+    memory: "128Mi"
+
+# Readiness and liveness probes
+livenessProbe:
+  enabled: true
+readinessProbe:
+  enabled: true
+
+# Pod labels added to all Pods
+podLabels:
+  module: "07"
+  environment: training
+
+# Key points:
+# 1. This file overrides default values from the chart's values.yaml
+# 2. Use 'helm show values bitnami/nginx' to see all configurable values
+# 3. Values can also be overridden inline with --set key=value
+# 4. Multiple -f files can be used; later files take precedence
+# 5. Use 'helm template' to preview rendered manifests before installing
