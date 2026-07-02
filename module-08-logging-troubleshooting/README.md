@@ -498,7 +498,7 @@ Press `Ctrl+C` to stop.
 
 For production-grade centralized logging you need an aggregator that ingests, indexes, and serves queries — not just a tail tool. **Grafana Loki** is the common pairing with Prometheus/Grafana for metrics + logs.
 
-The historic `grafana/loki-stack` Helm chart is **deprecated** as of 2026; new installs should use the maintained **`grafana/loki`** chart in `singleBinary` mode (suitable for small clusters and labs):
+The historic `grafana/loki-stack` Helm chart is **deprecated** as of 2026; new installs should use the maintained **`grafana/loki`** chart in `singleBinary` mode (suitable for small clusters and labs). The `read/write/backend.replicas=0` flags below are required with the current chart (v7.x) — without them the chart aborts because it sees non-zero replicas for *both* the single-binary and scalable targets:
 
 ```bash
 helm repo add grafana https://grafana.github.io/helm-charts
@@ -510,6 +510,9 @@ helm install loki grafana/loki -n monitoring --create-namespace \
   --set loki.storage.type=filesystem \
   --set loki.auth_enabled=false \
   --set singleBinary.replicas=1 \
+  --set read.replicas=0 \
+  --set write.replicas=0 \
+  --set backend.replicas=0 \
   --set 'loki.schemaConfig.configs[0].from=2024-04-01' \
   --set 'loki.schemaConfig.configs[0].store=tsdb' \
   --set 'loki.schemaConfig.configs[0].object_store=filesystem' \
@@ -522,7 +525,7 @@ helm install alloy grafana/alloy -n monitoring \
   --set 'controller.type=daemonset'
 ```
 
-Then add Loki as a Grafana data source (`http://loki.monitoring.svc.cluster.local:3100`) — if you installed `kube-prometheus-stack` in the next exercise its Grafana picks it up automatically.
+Then add Loki as a Grafana data source manually (**Connections → Data sources → Add data source → Loki**) with the URL `http://loki.monitoring.svc.cluster.local:3100`. If you installed `kube-prometheus-stack` in the next exercise, use *its* Grafana — but note it does **not** auto-discover Loki; only the Prometheus data source is pre-wired, so you still add Loki by hand (or provision it via a ConfigMap labeled `grafana_datasource`).
 
 > **📝 Note:** Treat this as a self-paced exercise — the install warm-up alone takes several minutes on a kind cluster. The official current docs are at <https://grafana.com/docs/loki/latest/setup/install/helm/>.
 
@@ -631,7 +634,12 @@ kubectl port-forward svc/kube-prometheus-grafana -n monitoring 3000:80
 
 Open a browser and navigate to `http://localhost:3000`:
 - **Username:** `admin`
-- **Password:** `prom-operator` (default for kube-prometheus-stack)
+- **Password:** retrieve it from the auto-generated secret (recent chart versions no longer use the old `prom-operator` default):
+
+```bash
+kubectl get secret kube-prometheus-grafana -n monitoring \
+  -o jsonpath='{.data.admin-password}' | base64 -d; echo
+```
 
 Explore the pre-installed dashboards:
 1. Navigate to **Dashboards → Browse**
