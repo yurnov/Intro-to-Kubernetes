@@ -1,0 +1,38 @@
+# broken-pod-configmap.yaml — Pod referencing a non-existent ConfigMap
+# Used in Lab 8 to practice troubleshooting CreateContainerConfigError.
+# The Pod tries to mount a ConfigMap called 'app-settings' that does not exist.
+# Participants must diagnose the issue and create the missing ConfigMap.
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: broken-configmap
+  namespace: training
+  labels:
+    app: broken-configmap
+    exercise: troubleshooting     # Identifies this as a troubleshooting exercise
+    module: "08"
+spec:
+  containers:
+  - name: app
+    image: busybox:1.37.0
+    command: ["sh", "-c", "cat /etc/config/settings.conf && sleep 3600"]
+    volumeMounts:
+    - name: config-volume
+      mountPath: /etc/config       # Mount point for the ConfigMap
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "25m"
+      limits:
+        memory: "64Mi"
+        cpu: "50m"
+  volumes:
+  - name: config-volume
+    configMap:
+      name: app-settings           # ❌ BUG: This ConfigMap does not exist!
+
+# Fix: Create the missing ConfigMap:
+#   kubectl create configmap app-settings --from-literal=settings.conf="debug=true" -n training
+# Diagnosis: kubectl describe pod broken-configmap -n training
+#   → Events will show: "configmap \"app-settings\" not found"

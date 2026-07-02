@@ -18,10 +18,8 @@ A hands-on training course designed to take participants from container basics t
 | 4 | [Storage and Secrets](module-04-storage-secrets/README.md) | 90 min | PV/PVC, StorageClass, ConfigMaps, Secrets |
 | 5 | [Networking](module-05-networking/README.md) | 90 min | CNI, DNS, Gateway API, NetworkPolicies |
 | 6 | [RBAC and Node Management](module-06-rbac-nodes/README.md) | 90 min | ServiceAccounts, Roles, node draining, affinity |
-| 7 | Advanced Abstractions & CI/CD | 90 min | StatefulSet, DaemonSet, CronJob, Helm, ArgoCD |
-| 8 | Logging, Monitoring & Troubleshooting | 90 min | Prometheus, Grafana, EFK, debugging |
-<!-- | 7 | [Advanced Abstractions & CI/CD](module-07-advanced-cicd/) | 90 min | StatefulSet, DaemonSet, CronJob, Helm, ArgoCD |
-| 8 | [Logging, Monitoring & Troubleshooting](module-08-logging-troubleshooting/) | 90 min | Prometheus, Grafana, EFK, debugging | -->
+| 7 | [Advanced Abstractions & CI/CD](module-07-advanced-cicd/README.md) | 90 min | StatefulSet, DaemonSet, CronJob, Helm, ArgoCD |
+| 8 | [Logging, Monitoring & Troubleshooting](module-08-logging-troubleshooting/README.md) | 90 min | Prometheus, Grafana, EFK, debugging |
 
 ## 🛠️ Lab Environment Setup
 

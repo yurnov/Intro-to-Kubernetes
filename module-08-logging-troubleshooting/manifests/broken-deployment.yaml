@@ -1,0 +1,43 @@
+# broken-deployment.yaml — Deployment with mismatched label selectors
+# Used in Lab 8 to practice troubleshooting Deployment issues.
+# The selector labels do not match the Pod template labels, which causes
+# the Deployment to fail to create/manage its ReplicaSet properly.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: broken-deploy
+  namespace: training
+  labels:
+    app: broken-deploy
+    module: "08"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: broken-deploy          # Selector expects 'app: broken-deploy'
+  template:
+    metadata:
+      labels:
+        app: broken-web           # ❌ BUG: Label is 'broken-web', not 'broken-deploy'!
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.30.0
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "25m"
+          limits:
+            memory: "64Mi"
+            cpu: "50m"
+
+# Fix: Change the Pod template label to match the selector:
+#   template.metadata.labels.app: broken-deploy
+# Diagnosis: kubectl apply -f broken-deployment.yaml
+#   → The API server will reject this with:
+#     "selector does not match template labels"
+# This error occurs at apply time — Kubernetes validates that the selector
+# matches the template labels and rejects mismatches immediately.

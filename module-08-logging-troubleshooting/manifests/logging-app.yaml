@@ -1,0 +1,75 @@
+# logging-app.yaml — Deployment that generates log output to stdout
+# Used in Lab 8 to practice log viewing with kubectl logs.
+# The app writes a timestamped JSON log entry every 2 seconds, following
+# the structured logging best practice of writing to stdout.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logging-app
+  namespace: training
+  labels:
+    app: logging-app
+    module: "08"
+spec:
+  replicas: 2                      # Multiple replicas for log aggregation demo
+  selector:
+    matchLabels:
+      app: logging-app
+  template:
+    metadata:
+      labels:
+        app: logging-app
+    spec:
+      containers:
+      - name: logger
+        image: busybox:1.37.0
+        command:
+        - sh
+        - -c
+        - |
+          echo '{"level":"info","msg":"Application starting","version":"1.0.0"}'
+          COUNTER=0
+          while true; do
+            COUNTER=$((COUNTER+1))
+            TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+            echo "{\"level\":\"info\",\"msg\":\"Processing request\",\"counter\":$COUNTER,\"timestamp\":\"$TIMESTAMP\"}"
+            if [ $((COUNTER % 10)) -eq 0 ]; then
+              echo "{\"level\":\"warn\",\"msg\":\"High latency detected\",\"counter\":$COUNTER,\"latency_ms\":523}"
+            fi
+            if [ $((COUNTER % 25)) -eq 0 ]; then
+              echo "{\"level\":\"error\",\"msg\":\"Connection timeout to upstream\",\"counter\":$COUNTER,\"error\":\"context deadline exceeded\"}" >&2
+            fi
+            sleep 2
+          done
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "25m"
+          limits:
+            memory: "64Mi"
+            cpu: "50m"
+---
+# Service exposes the logging-app for completeness
+apiVersion: v1
+kind: Service
+metadata:
+  name: logging-app
+  namespace: training
+  labels:
+    app: logging-app
+spec:
+  type: ClusterIP
+  selector:
+    app: logging-app
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+
+# Key points:
+# 1. The app writes structured JSON logs to stdout — the Kubernetes best practice
+# 2. It generates info, warn, and error level log messages
+# 3. Multiple replicas allow practicing log viewing across Pods
+# 4. Use 'kubectl logs -l app=logging-app' to view logs from all Pods
+# 5. Use 'kubectl logs <pod> -f' to follow/stream logs in real time

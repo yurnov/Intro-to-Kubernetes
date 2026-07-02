@@ -1,0 +1,31 @@
+# broken-pod-image.yaml — Pod with an intentionally WRONG image name
+# Used in Lab 8 to practice troubleshooting ImagePullBackOff errors.
+# The image 'nginx:99.99.99' does not exist, causing an ImagePullBackOff.
+# Participants must diagnose and fix the image tag.
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: broken-image
+  namespace: training
+  labels:
+    app: broken-image
+    exercise: troubleshooting     # Identifies this as a troubleshooting exercise
+    module: "08"
+spec:
+  containers:
+  - name: web
+    image: nginx:99.99.99         # ❌ BUG: This tag does not exist!
+    ports:
+    - containerPort: 80
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "25m"
+      limits:
+        memory: "64Mi"
+        cpu: "50m"
+
+# Fix: Change the image tag to a valid version, e.g., nginx:1.30.0
+# Diagnosis: kubectl describe pod broken-image -n training
+#   → Look at the Events section for "Failed to pull image" messages
